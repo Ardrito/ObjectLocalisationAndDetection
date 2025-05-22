@@ -29,7 +29,7 @@ from peft import get_peft_model, LoraConfig, TaskType
 
 flickr = load_from_disk("flickr30k_dataset/")
 
-split = flickr['test'].train_test_split(train_size=0.9, seed=42)
+split = flickr['test'].train_test_split(train_size=0.95, seed=42)
 
 train_set = split['train']
 val_set = split['test']
@@ -76,7 +76,7 @@ class flickr_dataset(Dataset):
     
     def __getitem__(self, index):
         img = self.images[index]
-        caption = self.caption[index][0]
+        caption = self.caption[index][random.randint(0,4)]
         #print (caption)
         caption = tokenizer.bos_token + caption + tokenizer.eos_token
 
@@ -166,8 +166,8 @@ class captioning(nn.Module):
         ], dim=1)
 
         return self.llama(
-            inputs_embeds=inputs_embeds
-            #attention_mask=extended_mask
+            inputs_embeds=inputs_embeds,
+            attention_mask=extended_mask
         )
     
 
@@ -369,7 +369,7 @@ model.eval().to("cuda")
 #     filter(lambda p: p.requires_grad, model.parameters()), lr=1e-6
 # )
 
-lr = 5E-4
+lr = 2E-6
 optimizer = torch.optim.Adam(params=model.parameters(),lr=lr)
 
 train(model, train_loader, val_loader, optimizer, device="cuda", epochs=20)
